@@ -1,0 +1,65 @@
+# Импортируем модели в shell
+from news_portal.models import *
+
+#1 Создаем двух пользователей
+User.objects.create_user('Roman')
+User.objects.create_user('Kate')
+
+#2 Создаем два объекта модели Author, связанной с пользователями
+us1 = User.objects.get(username = 'Roman')
+Author.objects.create(user=us1)
+us2 = User.objects.get(id = 2)
+Author.objects.create(user=us2)
+
+#3 Создаем 4 категории
+Category.objects.create(category_name = 'Спорт')
+Category.objects.create(category_name = 'IT')
+Category.objects.create(category_name = 'Музыка')
+Category.objects.create(category_name = 'Кино')
+
+#4 Добавляем 2 статьи и 1 новость
+Roman = Author.objects.get(user_id = 1)
+Kate = Author.objects.get(user_id = 2)
+Post.objects.create(author=Roman, post_type='news', header='Манчестер Юнайтед обыграл Фулхэм', text='Матч Кубка Англии завершился со счетом 3:1 в пользу хозяев, голы на свой счет записали Бруно Фернандеш и Марсель Забитцер')
+Post.objects.create(author=Kate, post_type='article', header='Diablo 4 сжигает видеокарты', text='У некоторых пользователей появились проблемы с их GPU во время игры в бета версию Diablo.')
+Post.objects.create(author=Roman, post_type='article', header='Вышла пятая серия "Короля и Шута"', text='На Кинопоиске продолжает выходить, как кажется, главная премьера сезона - панк-сказка "Король и Шут", где события из истори
+и группы чередуются с путешествием Горшка и Князя в фентези-мире')
+
+
+#5 Присваиваем постам категории
+Post.objects.get(id=1).category.add(Category.objects.get(id=1))
+Post.objects.get(id=2).category.add(Category.objects.get(id=2))
+Post.objects.get(id=3).category.add(Category.objects.get(id=3))
+Post.objects.get(id=3).category.add(Category.objects.get(id=4))
+
+#6 Пишем комментарии
+post1 = Post.objects.get(id=1)
+post2 = Post.objects.get(id=2)
+post3 = Post.objects.get(id=3)
+Comment.objects.create(post_id=post1.id, user_id=us2.id, comment_text='Манчестер Чемпион!')
+Comment.objects.create(post_id=post2.id, user_id=us1.id, comment_text='Хорошая статья')
+Comment.objects.create(post_id=post2.id, user_id=us2.id, comment_text='Спасибо')
+Comment.objects.create(post_id=post3.id, user_id=us2.id, comment_text='Фу, как это можно слушать')
+
+#7 Ставим лайки и дизлайки
+post1.like()
+post3.dislike()
+com1 = Comment.objects.get(id=1)
+com1.like()
+
+#8 Обновляем рейтинги пользователей
+Author.objects.get(id=1).update_rating()
+Author.objects.get(id=2).update_rating()
+Author.objects.get(id=1).rating
+Author.objects.get(id=2).rating
+
+#9 Выводим username и рейтинг лучшего пользователя
+a = Author.objects.order_by('rating').values('user')[0]['user']
+User.objects.get(id=a)
+
+#10 Вывод лучшей статьи с ее данными
+Post.objects.order_by('-post_rating').values('author', 'post_rating', 'header', 'text', 'date_time')[0]
+
+#11 Вывод комментариев к этой статье
+a = Post.objects.values('pk').order_by('post_rating')[0]['pk']
+Comment.objects.values('comment_text').filter(post_id = a)
